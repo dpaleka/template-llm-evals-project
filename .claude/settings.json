@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(git clone:*)",
+      "Bash(trash:*)",
+      "Bash(uv pip install:*)",
+      "Bash(uv run:*)",
+      "Bash(git submodule add:*)"
+    ],
+    "deny": []
+  }
+}

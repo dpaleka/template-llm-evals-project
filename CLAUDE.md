@@ -50,7 +50,7 @@ and then reset the counter to 10.
  - `--num_tasks` is the number of tasks (the size of the prefix of the JSONL file) to use for the experiment.
  - `--num_[sth]` is the number of [sth] to use for the experiment, especially when using subsets of tasks. For example, `--num_pairs 100` with `--num_tasks 50` should pick 100 pairs of tasks out of the first 50 tasks in the JSONL file
  - `--n_repeats` is the number of times to repeat each LLM call (with a different random seed). We usually use `ask_single_question(..., seed=repeat_idx)` for `repeat_idx = 0, 1, ..., n_repeats - 1`.
-- If the script is saving results to a file, YOU MUST *print the filename of the output file to stdout*, along with a very short description of what is being saved.
+- If the script is saving results to a file, you MUST *print the filename of the output file to stdout*, along with a very short description of what is being saved.
 - In output filenames, normalize names of models and datasets to not use `/` or whitespace; use underscores instead.
 - The LLM queries are cached. This means that you do not need to worry about continuing an experiment from where it left off, unless explicitly specified by the user. This also means you do not need to check if the output file already exists.
 - Before adding new fields to a config class derived from `ExperimentConfigBase`, check if the desired functionality already exists in an ancestor class. It is more likely to exist for general parameters like `model_id`, `temperature`, `num_tasks`, etc.
@@ -122,29 +122,25 @@ uv run python -m src.example_script --output_dir data/experiments --model_id gpt
 - For non-standard models, it is useful to specify the provider when calling Python or bash scripts, e.g. ``--model_id together:deepseek-ai/DeepSeek-R1`.
 
 # Github and git
-- You may use the `gh` CLI to interact with Github, for example, to create a new branch and open a PR.
+- You may use the `gh` CLI to interact with Github, for example, to create a new branch and open a PR. The authentication command is `gh auth login --with-token < <(echo $GH_TOKEN)`.
 - You can commit. Make sure you add only the files you have changed as part of a coherent change. Before adding any files, run `pre-commit run --all-files`.
 
 # Recent command history
 - If running on my machine, you will often find my recent command history helpful if you do not know how to run some command.
 - You can do e.g. `rg "uv run python -m src." ~/.histfile | tail -n 10` to see the ten most recent commands that start with `uv run python -m src.`; or search for `./src/scripts/` to see the most recent bash script runs.
 
-# File management
+# File management and exploration
 - Use `trash` instead of `rm` unless the user says otherwise.
+- Use `rg` to search for files.
+- Use `tree` to quickly understand the structure of a directory.
 
 
 ## Research principles
 
 **Experiment tracking:** After developing code for an experiment, write a one-sentence explanation of the experiment in `README.md`, together with the full bash command used to run the experiment.
 
-**Pre-experiment reflection:** Before coding an experiment, explicitly assess: (1) How does this experiment relate to the research question? (2) What result do I expect? (3) Is this the highest priority experiment?
-
 **Visualize early:** Create simple visualizations of results for every experiment. If you are running something, something needs to be visualized. Think about what the most informative plot/table is and create that.
 
 **Model simplification:** Run with the default small models and a smaller dataset (or smaller `num_tasks`) before running the full experiment.
 
-**Variable isolation:** If running ablation or consistency experiments, change one variable at a time when possible to draw clearer conclusions.
-
-**Early feedback loop:** Design experiments to get critical signals as quickly as possible. Create the shortest path to running an experiment and analyzing results.
-
-**Systematic exploration:** When analyzing results, suggest targeted experiments that would provide the next most valuable bits of information.
+**Systematic exploration:** If asked to analyze results, suggest targeted experiments that would provide the next most valuable bits of information.

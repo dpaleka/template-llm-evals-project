@@ -12,6 +12,11 @@ dependencies = [
 target-version = "py311"
 extend-include = ["*.ipynb"]
 extend-exclude = ["submodules"]
+exclude = [
+  "safety-tooling",
+  "*.ipynb",
+  "README.md",
+]
 
 # Line length 120 to makes it easier to have multiple files open side-by-side.
 line-length = 120
@@ -19,6 +24,18 @@ line-length = 120
 [tool.ruff.lint]
 # Check that imports are sorted
 extend-select = ["I"]
+ignore = [
+  # line too long
+  "E501",
+  # module level import not at top of file
+  "E402",
+  # ambiguous variable name
+  "E741",
+  # local variable name is assigned to but never used
+  "F841",
+  # import star
+  "F403",
+]
 
 [tool.ruff.lint.isort]
 # wandb is a package, but sometimes also a folder that gets created.

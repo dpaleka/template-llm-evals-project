@@ -116,14 +116,14 @@ uv run python -m src.example_script --output_dir data/experiments --model_id gpt
 ## Models
 - The default model to debug code (in the sense that "does the code even run?") is `gpt-4.1-mini-2025-04-14`. By default, use this in tests.
   - If the LLM cognition required in the test is more demanding, use `gpt-4.1-2025-04-14` instead.
-- The default model to run any experiment where we want to get a sense of what the model is doing is `claude-3-5-sonnet-20240620`.
+- The default model to run any experiment where we want to get a sense of what the model is doing is either `claude-sonnet-4-20250514` or `gpt-4.1-2025-04-14`.
 - Any sample commands you write should be for one of the above models. Do not use other models when writing sample commands.
-- Some other models we will be interested in are `claude-3-opus-20240229` and `claude-3-7-sonnet-20250219`.
 - For non-standard models, it is useful to specify the provider when calling Python or bash scripts, e.g. ``--model_id together:deepseek-ai/DeepSeek-R1`.
 
 # Github and git
 - You may use the `gh` CLI to interact with Github, for example, to create a new branch and open a PR. The authentication command is `gh auth login --with-token < <(echo $GH_TOKEN)`.
 - You can commit. Make sure you add only the files you have changed as part of a coherent change. Before adding any files, run `pre-commit run --all-files`.
+- **CRITICAL: ONLY create PRIVATE repositories. NEVER create public repos. User will change to public if needed.**
 
 # Recent command history
 - If running on my machine, you will often find my recent command history helpful if you do not know how to run some command.

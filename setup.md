@@ -25,13 +25,13 @@ deactivate
 
 ## Running Scripts
 
-Always use `uv run python -m ...` instead of `python -m ...` when running scripts.
+Always use `uv run -m ...` instead of `python -m ...` when running scripts.
 
 Example:
 ```bash
-uv run python -m src.example_download_dataset --dataset_name openai/gsm8k --output_dir data/
+uv run -m src.example_download_dataset --dataset_name openai/gsm8k --output_dir data/
 ```
 
 ```bash
-uv run python -m src.example_response_length --task_file data/gsm8k_test.jsonl --output_dir data/experiments --model_id gpt-4.1-mini-2025-04-14 --num_tasks 10 --seed 42
+uv run -m src.example_response_length --task_file data/gsm8k_test.jsonl --output_dir data/experiments --model_id gpt-4.1-mini-2025-04-14 --num_tasks 10 --seed 42
 ```

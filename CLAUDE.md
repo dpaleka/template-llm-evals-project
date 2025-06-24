@@ -11,7 +11,8 @@ and then reset the counter to 10.
 - All data resides in data/.
 - All tests reside in the tests/ directory.
 - For any complex functionality in src/, implement tests in tests/. Check existing tests to see if it fits in some existing test file, otherwise create a new one. Tests should not be expensive.
-- We run everything with `uv run python -m ...`. YOU MUST NEVER USE `python -m ...`.
+- We run everything with `uv run -m ...`. YOU MUST NEVER USE `python -m ...`.
+  - You can look up uv documentation at [https://docs.astral.sh/uv/llms.txt](https://docs.astral.sh/uv/llms.txt)
 - Prefer iteration and modularization over code duplication.
 - Use descriptive variable names with auxiliary verbs (e.g., is_active, has_permission).
 - Use lowercase with underscores for directories and files (e.g., routers/user_routes.py).
@@ -123,6 +124,7 @@ uv run python -m src.example_script --output_dir data/experiments --model_id gpt
 # Github and git
 - You may use the `gh` CLI to interact with Github, for example, to create a new branch and open a PR. The authentication command is `gh auth login --with-token < <(echo $GH_TOKEN)`.
 - You can commit. Make sure you add only the files you have changed as part of a coherent change. Before adding any files, run `pre-commit run --all-files`.
+- When asked to commit, commit and push.
 - **CRITICAL: ONLY create PRIVATE repositories. NEVER create public repos. User will change to public if needed.**
 
 # Recent command history

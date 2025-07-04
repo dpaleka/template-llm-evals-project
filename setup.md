@@ -35,3 +35,23 @@ uv run -m src.example_download_dataset --dataset_name openai/gsm8k --output_dir 
 ```bash
 uv run -m src.example_response_length --task_file data/gsm8k_test.jsonl --output_dir data/experiments --model_id gpt-4.1-mini-2025-04-14 --num_tasks 10 --seed 42
 ```
+
+## Running servers
+
+Example:
+```bash
+uv run -m src.clip_server
+```
+
+The server will start on `http://localhost:8080` and load the LAION CLIP-ViT-B-32-laion2B-s34B-b79K model.
+
+**Batching Options:**
+- `--max-batch-size 8`: Maximum batch size for processing (default: 8)
+- `--batch-timeout-ms 2`: Batch timeout in milliseconds (default: 2)
+- `--host 0.0.0.0`: Host to bind to
+- `--port 8080`: Port to bind to
+
+Example with custom batching:
+```bash
+uv run -m src.clip_server --max-batch-size 16 --batch-timeout-ms 5
+```

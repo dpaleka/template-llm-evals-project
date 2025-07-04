@@ -6,6 +6,20 @@ requires-python = ">=3.10"
 dependencies = [
     "datasets",
     "simple-parsing",
+    "face-recognition",
+    "transformers",
+    "torch",
+    "pillow",
+    "opencv-python",
+    "tqdm",
+    "starlette",
+    "uvicorn",
+    "httpx",
+    "numpy",
+    "jsonlines",
+    "pandas",
+    "matplotlib",
+    "wandb",
 ]
 
 [tool.ruff]

@@ -12,7 +12,7 @@ and then reset the counter to 10.
 - All tests reside in the tests/ directory.
 - For any complex functionality in src/, implement tests in tests/. Check existing tests to see if it fits in some existing test file, otherwise create a new one. Tests should not be expensive.
 - We run everything with `uv run -m ...`. YOU MUST NEVER USE `python -m ...`.
-  - You can look up uv documentation at [https://docs.astral.sh/uv/llms.txt](https://docs.astral.sh/uv/llms.txt)
+  - If anything is unclear, look up uv documentation at [https://docs.astral.sh/uv/llms.txt](https://docs.astral.sh/uv/llms.txt).
 - Prefer iteration and modularization over code duplication.
 - Use descriptive variable names with auxiliary verbs (e.g., is_active, has_permission).
 - Use lowercase with underscores for directories and files (e.g., routers/user_routes.py).
@@ -132,12 +132,36 @@ uv run python -m src.example_script --output_dir data/experiments --model_id gpt
 - You can do e.g. `rg "uv run python -m src." ~/.histfile | tail -n 10` to see the ten most recent commands that start with `uv run python -m src.`; or search for `./src/scripts/` to see the most recent bash script runs.
 
 # File management and exploration
-- Use `trash` instead of `rm` unless the user says otherwise.
-- Use `rg` to search for files.
-- Use `tree` to quickly understand the structure of a directory.
+- ALWAYS use `trash` instead of `rm` unless the user says otherwise.
+- Use `rg` to search for files instead of `grep`.
+- USE `tree` FREQUENTLY instead of `ls` to remind yourself of the structure of a directory. You only use `ls` in very rare cases.
+
+# Opening webpages
+- If the user provides a documentation in text form (e.g. https://docs.astral.sh/uv/llms.txt), open the links, but keep
+- You have a Playwright MCP installed. If not, tell the user to install it using `claude mcp add playwright npx '@playwright/mcp@latest`. This can help you open webpages in the browser and see them as the user sees them.
 
 
-## Research principles
+# Local models
+
+## Server Pattern for Heavy Models
+For computationally expensive models (e.g., large vision models, embeddings models) that we have to interact with in a customized fashion (not supported by the vllm default used in safety-tooling), we use a server-client pattern:
+
+**Design principles:**
+   - Run heavy models in a dedicated server process using Starlette/FastAPI (example: `src/clip_server.py`). The default port is 8080.
+   - Keep only the computationally expensive operations in the server (e.g., embedding generation is in the server, but similarity computation is in the client)
+   - Implement separate endpoints for different model operations (e.g., `/embed_text`, `/embed_image`)
+   - Use async/await with queuing to handle requests efficiently
+   - Server: Loads model once, generates embeddings/features. Logs all errors with context for debugging
+   - Client: Handles all lightweight operations (similarity computation, ranking, filtering)
+   - *Performance considerations:*: - Use dynamic batching (accumulate requests before processing, wait for a few miliseconds or for a batch to be full); batch size is specified when running the server but has a default value; -
+
+
+# Visualization of results
+- The default visualization is just stdout. Use stdout if there are only a few numbers to display.
+- Whenever needed (e.g. for a dataset), create nice-looking HTML visualizations after processing data; the default location is `localhost:8765/{visualization_name}.html`. Always allow the user to sort/filter the results by key parameters in the displayed HTML.
+
+
+# Research principles
 
 **Experiment tracking:** After developing code for an experiment, write a one-sentence explanation of the experiment in `README.md`, together with the full bash command used to run the experiment.
 

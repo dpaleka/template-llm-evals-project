@@ -30,7 +30,7 @@ and then reset the counter to 10.
 
 ## Ruff
 - Your code will be Ruff-formatted by a pre-commit hook.
-- We don't care about: E501 (line too long), E402 (module level import not at top of file), E741 (ambiguous variable name), F841 (local variable name is assigned to but never used), F403 (import star).
+- We don't care about: E501 (line too long), E402 (module level import not at top of file), E741 (ambiguous variable name), F841 (local variable name is assigned to but never used), F403 (import star), F401 (unused import).
 
 ## LLM API requests
 - We use `InferenceAPI` from `safetytooling.apis` to make requests to LLMs.

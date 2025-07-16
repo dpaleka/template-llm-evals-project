@@ -268,7 +268,6 @@ app = Starlette(
 
 
 if __name__ == "__main__":
-
     # Parse command line arguments
     parser = argparse.ArgumentParser(description="CLIP embedding server with dynamic batching")
     parser.add_argument("--max-batch-size", type=int, default=8, help="Maximum batch size for processing (default: 8)")

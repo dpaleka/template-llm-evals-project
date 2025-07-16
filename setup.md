@@ -16,6 +16,14 @@ uv pip install -r requirements_dev.txt
 deactivate
 ```
 
+## Installing Optional Dependencies
+
+The project has optional machine learning dependencies (torch, transformers, opencv-python) that can be installed when needed:
+
+```bash
+uv pip install -e ".[ml]"
+```
+
 ## Project Structure
 
 - `src/` - All core code

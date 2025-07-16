@@ -6,11 +6,7 @@ requires-python = ">=3.10"
 dependencies = [
     "datasets",
     "simple-parsing",
-    "face-recognition",
-    "transformers",
-    "torch",
     "pillow",
-    "opencv-python",
     "tqdm",
     "starlette",
     "uvicorn",
@@ -19,7 +15,18 @@ dependencies = [
     "jsonlines",
     "pandas",
     "matplotlib",
+    "seaborn",
+    "openai",
+    "python-dotenv",
     "wandb",
+    "pytest",
+]
+
+[project.optional-dependencies]
+ml = [
+    "torch",
+    "transformers",
+    "opencv-python",
 ]
 
 [tool.ruff]

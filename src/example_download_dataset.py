@@ -20,8 +20,11 @@ async def main(cfg: DatasetConfig) -> None:
     """Download and save GSM8K test dataset."""
     LOGGER.info(f"Downloading {cfg.dataset_name} dataset")
 
-    # Download GSM8K test split
-    dataset = load_dataset(cfg.dataset_name, split="test")
+    # Download GSM8K test split - handle dataset config if needed
+    if cfg.dataset_name == "openai/gsm8k":
+        dataset = load_dataset(cfg.dataset_name, name="main", split="test")
+    else:
+        dataset = load_dataset(cfg.dataset_name, split="test")
     filename_base = cfg.dataset_name.split("/")[-1]
 
     # Prepare output path
@@ -43,5 +46,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     cfg: DatasetConfig = args.config
 
-    cfg.setup_experiment(log_file_prefix=f"{cfg.dataset_name}_download")
+    # Replace slashes in dataset name for log file prefix
+    log_file_prefix = cfg.dataset_name.replace("/", "_") + "_download"
+    cfg.setup_experiment(log_file_prefix=log_file_prefix)
     asyncio.run(main(cfg))

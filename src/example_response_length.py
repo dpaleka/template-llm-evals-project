@@ -91,5 +91,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     cfg: ResponseLengthConfig = args.config
 
-    cfg.setup_experiment(log_file_prefix="response_length")
+    # Replace problematic characters in model_id for log file prefix
+    log_file_prefix = f"{cfg.model_id.replace('/', '_').replace('.', '_')}_response_length"
+    cfg.setup_experiment(log_file_prefix=log_file_prefix)
     asyncio.run(main(cfg))

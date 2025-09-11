@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from safetytooling.apis import InferenceAPI
+from safetytooling.utils import utils
 from safetytooling.utils.experiment_utils import ExperimentConfigBase
 from simple_parsing import ArgumentParser
 
@@ -54,14 +55,14 @@ async def evaluate_response_length(
     }
 
 
-async def main(cfg: ResponseLengthConfig) -> None:
+async def run_response_length_experiment(config: ResponseLengthConfig, api: InferenceAPI) -> None:
     """Run the response length experiment."""
     # Load dataset
-    data_file = Path(cfg.task_file)
+    data_file = Path(config.task_file)
     tasks = []
     with open(data_file, "r") as f:
         for i, line in enumerate(f):
-            if i >= cfg.num_tasks:
+            if i >= config.num_tasks:
                 break
             tasks.append(json.loads(line))
 
@@ -70,12 +71,12 @@ async def main(cfg: ResponseLengthConfig) -> None:
     # Process tasks
     results = []
     for task_dict in tasks:
-        result = await evaluate_response_length(task_dict, cfg, cfg.api)
+        result = await evaluate_response_length(task_dict, config, api)
         results.append(result)
 
     # Save results
-    cfg.output_dir.mkdir(parents=True, exist_ok=True)
-    output_file = cfg.output_dir / f"{cfg.model_id.replace('/', '_').replace('.', '_')}_length_results.jsonl"
+    config.output_dir.mkdir(parents=True, exist_ok=True)
+    output_file = config.output_dir / f"{config.model_id.replace('/', '_').replace('.', '_')}_length_results.jsonl"
 
     with open(output_file, "w") as f:
         for result in results:
@@ -85,13 +86,26 @@ async def main(cfg: ResponseLengthConfig) -> None:
     print(f"Results saved to: {output_file}")
 
 
-if __name__ == "__main__":
+async def main():
+    """Main entry point."""
     parser = ArgumentParser()
     parser.add_arguments(ResponseLengthConfig, dest="config")
     args = parser.parse_args()
-    cfg: ResponseLengthConfig = args.config
+    config = args.config
 
     # Replace problematic characters in model_id for log file prefix
-    log_file_prefix = f"{cfg.model_id.replace('/', '_').replace('.', '_')}_response_length"
-    cfg.setup_experiment(log_file_prefix=log_file_prefix)
-    asyncio.run(main(cfg))
+    log_file_prefix = f"{config.model_id.replace('/', '_').replace('.', '_')}_response_length"
+    config.setup_experiment(log_file_prefix=log_file_prefix)
+
+    # Setup environment after logging is configured
+    utils.setup_environment()
+
+    # Initialize API
+    api = InferenceAPI()
+
+    # Run the experiment logic
+    await run_response_length_experiment(config, api)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

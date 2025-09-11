@@ -27,12 +27,26 @@ and then reset the counter to 10.
 - Avoid unnecessary curly braces in conditional statements.
 - For single-line statements in conditionals, omit curly braces.
 - Use concise, one-line syntax for simple conditional statements (e.g., if condition: do_something()).
+- **IMPORTANT**: We try to avoid using try-except blocks as much as possible, especially when creating data. LET IT FAIL. Silent failure is the worst, and you can assume basically all failures will be silent unless something fails or you yell about it in multiple places. *Do or do not. There is no try.*
 
 ## Ruff
 - Your code will be Ruff-formatted by a pre-commit hook.
 - We don't care about: E501 (line too long), E402 (module level import not at top of file), E741 (ambiguous variable name), F841 (local variable name is assigned to but never used), F403 (import star), F401 (unused import).
 
 ## LLM API requests
+Always use the wrapper functions in `src/common/safetytooling_wrappers.py`:
+```python
+from src.common.safetytooling_wrappers import ask_single_question
+
+# Use wrapper instead of direct API calls
+response = await ask_single_question(
+    api=api,
+    model_id="gpt-5-mini-2025-08-07",
+    question=question,
+    system_prompt=system_prompt
+)
+```
+
 - We use `InferenceAPI` from `safetytooling.apis` to make requests to LLMs.
 - For LLM requests, use the wrapper function `ask_single_question` from `common.safetytooling_wrappers` instead of calling `api.ask_single_question` directly.
   - The signature is `async def ask_single_question(api: InferenceAPI, model_id: str, question: str, system_prompt: str | None = None, **api_kwargs,) -> list[str]:`, and the list contains a single response.
@@ -40,6 +54,21 @@ and then reset the counter to 10.
 - The LLM query results are automatically cached.
 - By default, use `tqdm.gather` without batches around async coroutines that involve making LLM requests.
 - Take care and log failed requests, or print them prominently. Do not let failed requests slide silently. Also do not let them crash the script.
+- safety-tooling manages internal async parallelization and max-concurrency; the `--*_num_threads` flags only control upstream caller concurrency.
+
+### Model Configuration
+- **Default debug model**: `gpt-5-mini-2025-08-07` (for testing if code runs)
+  - If LLM cognition required in the test is more demanding, use `gpt-5-2025-08-07` instead
+- **Default production models**: `claude-sonnet-4-20250514` or `gpt-5-2025-08-07`
+- **Provider prefixes supported**: `openai:model-name`, `anthropic:model-name`, `openrouter:model-name`. In case of no provider prefix, safety-tooling will try to infer a default provider from the model name; this is not robust.
+- Any sample commands you write should be for one of the above models. Do not use other models when writing sample commands.
+- For non-standard models, it is useful to specify the provider (almost always `openrouter`) when calling scripts, e.g. `--model_id openrouter:deepseek/deepseek-r1-0528`
+
+### Error Handling
+- All LLM API calls should be async with proper error handling
+- Failed requests should be logged prominently, not silently ignored
+- Processing should continue on individual failures when possible
+- Use rate limiting to respect API constraints
 
 ## Scripts For Experiments
 - We always inherit from the `safetytooling` library's `ExperimentConfigBase` class to configure experiments.
@@ -52,9 +81,21 @@ and then reset the counter to 10.
  - `--num_[sth]` is the number of [sth] to use for the experiment, especially when using subsets of tasks. For example, `--num_pairs 100` with `--num_tasks 50` should pick 100 pairs of tasks out of the first 50 tasks in the JSONL file
  - `--n_repeats` is the number of times to repeat each LLM call (with a different random seed). We usually use `ask_single_question(..., seed=repeat_idx)` for `repeat_idx = 0, 1, ..., n_repeats - 1`.
 - If the script is saving results to a file, you MUST *print the filename of the output file to stdout*, along with a very short description of what is being saved.
+- When a script produces data that can be visualized and there is a separate plotting/visualization script, the data production script should print out the command to plot at the end.
 - In output filenames, normalize names of models and datasets to not use `/` or whitespace; use underscores instead.
 - The LLM queries are cached. This means that you do not need to worry about continuing an experiment from where it left off, unless explicitly specified by the user. This also means you do not need to check if the output file already exists.
 - Before adding new fields to a config class derived from `ExperimentConfigBase`, check if the desired functionality already exists in an ancestor class. It is more likely to exist for general parameters like `model_id`, `temperature`, `num_tasks`, etc.
+
+## Documentation Requirements
+- **CRITICAL**: Every script MUST have example commands in its README that include an example input path or clear description of the input data.
+- Example commands must show users exactly what data the script operates on and where it comes from.
+- Never use vague descriptions like "loads data" - always specify the exact file/directory structure expected.
+
+## Input Data Policy
+- **NEVER use default paths for input data in any script**.
+- All input data paths must be explicitly provided via command-line arguments.
+- Users must always specify `--dataset_path` or equivalent parameters.
+- This ensures clarity about what data is being processed and prevents accidental runs on wrong datasets.
 
 ## Logging
 - Scripts using ExperimentConfigBase will automatically create a logging file in the `output_dir` directory.
@@ -79,7 +120,26 @@ and then reset the counter to 10.
 - When printing stuff to stdout, use print(f"{varname=}") to print the variable name and value.
 - Do not use fstrings if you're just printing a string without any variables.
 
-## Tests
+- **Background processes**: When testing servers with `&`, always `kill` the actual process PID, not just the shell. Use `ps aux | grep process_name` then `kill <PID>`.
+
+## Testing and Quality
+
+### Running Tests
+```bash
+# Standard tests
+uv run -m pytest tests/ -v -s
+
+# For slow tests (batch API, etc.)
+SAFETYTOOLING_SLOW_TESTS=True uv run -m pytest -v -s -n 6
+```
+
+### Code Style
+- Line length: 120 characters
+- Use ruff for linting and formatting
+- Type hints required for all functions
+- Async functions for any LLM API interactions
+
+### Test Guidelines
 - Write tests for new functions. Do not mock things. If you are testing an LLM-based function, use a real datapoint, and call it with an OpenAI model.
 - Before importing `safetytooling` in tests, you need to import something from `src` first, so that the `safetytooling` library gets in the $PYTHONPATH. Do this at the top of the test file, for example:
 ```
@@ -92,11 +152,11 @@ utils.setup_environment()
 ```
 - We run tests as follows:
 ```
-uv run python -m pytest tests/[test_file].py -v -s
+uv run -m pytest tests/[test_file].py -v -s
 ```
 or
 ```
-uv run python -m pytest tests/[test_file].py::[test_name] -v -s
+uv run -m pytest tests/[test_file].py::[test_name] -v -s
 ```
 - When writing a function, first write the tests and confirm they fail, before progressing further.
 - Make sure the tests pass before committing. If a particular test is failing, think deeply about whether your implementation is correct or the test is wrong.
@@ -109,27 +169,84 @@ uv run python -m pytest tests/[test_file].py::[test_name] -v -s
 - Use `--seed 42` to set the random seed.
 - To test whether a script works, run it in a single line with all the required arguments.
 ```
-uv run python -m src.example_script --output_dir data/experiments --model_id gpt-4.1-mini-2025-04-14 --temperature 0.0 --num_tasks 10 --openai_num_threads 50 --seed 42
+uv run -m src.example_script --input_path data/example_data.jsonl --output_dir data/experiments --model_id gpt-5-mini-2025-08-07 --num_tasks 10 --openai_num_threads 50 --seed 42
 ```
 - When testing scripts, use a smaller `--num_tasks` value, preferably 10.
 
 
-## Models
-- The default model to debug code (in the sense that "does the code even run?") is `gpt-4.1-mini-2025-04-14`. By default, use this in tests.
-  - If the LLM cognition required in the test is more demanding, use `gpt-4.1-2025-04-14` instead.
-- The default model to run any experiment where we want to get a sense of what the model is doing is either `claude-sonnet-4-20250514` or `gpt-4.1-2025-04-14`.
-- Any sample commands you write should be for one of the above models. Do not use other models when writing sample commands.
-- For non-standard models, it is useful to specify the provider when calling Python or bash scripts, e.g. ``--model_id together:deepseek-ai/DeepSeek-R1`.
 
 # Github and git
 - You may use the `gh` CLI to interact with Github, for example, to create a new branch and open a PR. The authentication command is `gh auth login --with-token < <(echo $GH_TOKEN)`.
-- You can commit. Make sure you add only the files you have changed as part of a coherent change. Before adding any files, run `pre-commit run --all-files`.
+- Use the `gh` CLI for all GitHub interactions (issues, PRs, checks, etc). When given a GitHub URL, use gh commands to fetch the information.
+- You can commit. Make sure you add only the files you have changed as part of a coherent change.
+- **ALWAYS run `pre-commit run --all-files` before every commit to avoid formatting issues and unstaged changes after commit. Then run `git status` to see what files were modified by the pre-commit hooks and stage those changes.**
 - When asked to commit, commit and push.
+- When adding changes to commit and push, you should ALWAYS do `git status` first, then add only the files you want to add in this commit.
 - **CRITICAL: ONLY create PRIVATE repositories. NEVER create public repos. User will change to public if needed.**
+
+## Pull Request Planning and Documentation
+- **CRITICAL**: When working on PRs, create and maintain a `plan.md` file throughout the development process
+- This plan should document:
+  - Current implementation progress
+  - Key decisions and rationale
+  - Test results and verification steps
+  - Next steps and remaining work
+- **At the end of the PR work**, append the content of `plan.md` to the TOP of `research_log.md` with proper formatting
+- Follow the format shown in `research_log.md` with clear headers, status indicators (✅/❌), and structured sections
+- This creates a persistent record of all research and development work done on each issue
+
+## Git Worktrees
+Git worktrees allow working on multiple branches simultaneously without switching between branches:
+
+### Intelligent Worktree Management
+Use the provided `claude-worktree.sh` script for streamlined worktree creation:
+
+```bash
+# For GitHub issues (auto-generates branch name using Claude)
+source claude-worktree.sh 42
+
+# For specific branch names
+source claude-worktree.sh feature-branch
+```
+
+**Key features:**
+- Creates worktrees in parallel directories (e.g., `../project-name-issue-42`)
+- Uses Claude to suggest branch names based on GitHub issue titles
+- Handles existing local/remote branches intelligently
+- Automatically symlinks shared resources (.venv, .cache, .pytest_cache, uv.lock)
+- Copies environment files (.env)
+- Sets up GitHub authentication if GH_TOKEN is available
+
+### Automated Cleanup
+Use `clean-worktrees.sh` to remove worktrees for merged branches:
+
+```bash
+./clean-worktrees.sh
+```
+
+**Features:**
+- Finds branches from merged PRs using GitHub CLI
+- Prompts once for "yes to all" removals
+- Uses `trash` command for safe file deletion
+- Automatically deletes local branches after removing worktrees
+- Lists remaining worktrees when complete
+
+### Worktree Best Practices
+- **Shared dependencies**: Symlink `.venv` and lock files to avoid duplicate installations
+- **Shared caches**: Symlink `.cache`, `.pytest_cache` for performance
+- **Environment consistency**: Copy `.env` files to new worktrees
+- **Branch naming**: Use descriptive names like `issue-42-fix-auth-bug`
+- **Regular cleanup**: Run cleanup script periodically to maintain repository health
+
+### Benefits Over Branch Switching
+- No need to stash/unstash work when switching contexts
+- Maintain multiple development environments simultaneously
+- Avoid rebuilding caches when switching between tasks
+- Enable concurrent testing across different feature branches
 
 # Recent command history
 - If running on my machine, you will often find my recent command history helpful if you do not know how to run some command.
-- You can do e.g. `rg "uv run python -m src." ~/.histfile | tail -n 10` to see the ten most recent commands that start with `uv run python -m src.`; or search for `./src/scripts/` to see the most recent bash script runs.
+- You can do e.g. `rg "uv run -m src." ~/.histfile | tail -n 10` to see the ten most recent commands that start with `uv run -m src.`; or search for `./src/scripts/` to see the most recent bash script runs.
 
 # File management and exploration
 - ALWAYS use `trash` instead of `rm` unless the user says otherwise.
@@ -163,10 +280,17 @@ For computationally expensive models (e.g., large vision models, embeddings mode
 
 # Research principles
 
-**Experiment tracking:** After developing code for an experiment, write a one-sentence explanation of the experiment in `README.md`, together with the full bash command used to run the experiment.
+**Experiment tracking:** After developing code for an experiment, write a one-sentence explanation of the experiment in the relevant `README.md`, together with the full bash command used to run the experiment. Add what the script expects and what it outputs too.
 
 **Visualize early:** Create simple visualizations of results for every experiment. If you are running something, something needs to be visualized. Think about what the most informative plot/table is and create that.
 
-**Model simplification:** Run with the default small models and a smaller dataset (or smaller `num_tasks`) before running the full experiment.
+**Trying out with small models on a small dataset:** Run with the default small models and a very small `num_tasks` (e.g. `--num_tasks 2`) before running a full experiment.
+
+**Tell the user the command to run a full experiment:** If asked to run a full experiment, tell the user the command to run a full experiment, and they will run it in another terminal. Use multiline bash and backslashes to make the command copy-pasteable.
 
 **Systematic exploration:** If asked to analyze results, suggest targeted experiments that would provide the next most valuable bits of information.
+
+# important-instruction-reminders
+Do what has been asked; nothing more, nothing less. You may suggest the user to change their intention, but do not change their intention without confirming with the user.
+NEVER create files unless they're absolutely necessary for achieving your goal.
+ALWAYS prefer editing an existing file to creating a new one.

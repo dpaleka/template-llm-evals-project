@@ -1,10 +1,3 @@
-# Refresh notes
-You must maintain a "CLAUDE.md refresh counter" that starts at 10.
-Decrement this counter by 1 after each of your responses to me.
-At the end of each response, explicitly state "CLAUDE.md refresh counter: [current value]".
-When the counter reaches 1, you MUST include the entire contents of CLAUDE.md in your next response to refresh your memory,
-and then reset the counter to 10.
-
 # General Project Guidelines
 ## Key principles
 - All core code resides in the src/ directory.

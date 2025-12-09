@@ -1,5 +1,9 @@
 **Check the global CLAUDE.md (`~/.claude/CLAUDE.md`) if present for additional instructions.**
 
+# Setup
+
+**IMPORTANT**: Before running any code in this project, follow the instructions in `setup.md` to install `safetytooling` and other dependencies. The `safetytooling` library is a git submodule that must be initialized and installed in editable mode.
+
 # General Project Guidelines
 ## Key principles
 - All core code resides in the src/ directory.
@@ -59,6 +63,10 @@ response = await ask_single_question(
 - Any sample commands you write should be for one of the above models. Do not use other models when writing sample commands.
 - For non-standard models, it is useful to specify the provider (almost always `openrouter`) when calling scripts, e.g. `--model_id openrouter:deepseek/deepseek-r1-0528`
 - **OpenRouter model lookup**: To look up OpenRouter model IDs, call `curl https://openrouter.ai/api/v1/models`. Model ID format examples: `openai/gpt-5`, `anthropic/claude-opus-4.5`. Always use the newest/latest model versions when possible.
+
+### API Parameters to Avoid
+- **Do NOT use `temperature`** - Let safetytooling use defaults.
+- **Do NOT use `max_tokens`** - Let safetytooling use defaults.
 
 ### Error Handling
 - All LLM API calls should be async with proper error handling

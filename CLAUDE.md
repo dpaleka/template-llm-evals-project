@@ -1,3 +1,5 @@
+**Check the global CLAUDE.md (`~/.claude/CLAUDE.md`) if present for additional instructions.**
+
 # General Project Guidelines
 ## Key principles
 - All core code resides in the src/ directory.
@@ -56,6 +58,7 @@ response = await ask_single_question(
 - **Provider prefixes supported**: `openai:model-name`, `anthropic:model-name`, `openrouter:model-name`. In case of no provider prefix, safety-tooling will try to infer a default provider from the model name; this is not robust.
 - Any sample commands you write should be for one of the above models. Do not use other models when writing sample commands.
 - For non-standard models, it is useful to specify the provider (almost always `openrouter`) when calling scripts, e.g. `--model_id openrouter:deepseek/deepseek-r1-0528`
+- **OpenRouter model lookup**: To look up OpenRouter model IDs, call `curl https://openrouter.ai/api/v1/models`. Model ID format examples: `openai/gpt-5`, `anthropic/claude-opus-4.5`. Always use the newest/latest model versions when possible.
 
 ### Error Handling
 - All LLM API calls should be async with proper error handling
@@ -154,6 +157,20 @@ uv run -m pytest tests/[test_file].py::[test_name] -v -s
 - When writing a function, first write the tests and confirm they fail, before progressing further.
 - Make sure the tests pass before committing. If a particular test is failing, think deeply about whether your implementation is correct or the test is wrong.
 - You should never mock things to make the tests pass.
+
+## Tmux Policy
+- **ALWAYS run commands where Daniel might want to see output in tmux sessions**
+- This includes: training runs, playthroughs, servers, long-running processes, interactive scripts
+- **Start the session first, then send keys** - don't pass commands directly to `new-session`
+- **ALWAYS source .env first** in new tmux sessions for API keys (TINKER_API_KEY, etc.)
+- Use `tmux send-keys` to interact with running sessions
+- Example:
+  ```bash
+  tmux new-session -d -s myrun
+  tmux send-keys -t myrun "source .env" Enter
+  tmux send-keys -t myrun "uv run -m my_script" Enter
+  ```
+- This way the shell persists after commands finish, and Daniel can `tmux attach -t myrun` anytime
 
 ## Calling Scripts
 - Every call to a script has to have `--output_dir` provided as an argument.
@@ -279,11 +296,4 @@ For computationally expensive models (e.g., large vision models, embeddings mode
 
 **Trying out with small models on a small dataset:** Run with the default small models and a very small `num_tasks` (e.g. `--num_tasks 2`) before running a full experiment.
 
-**Tell the user the command to run a full experiment:** If asked to run a full experiment, tell the user the command to run a full experiment, and they will run it in another terminal. Use multiline bash and backslashes to make the command copy-pasteable.
-
 **Systematic exploration:** If asked to analyze results, suggest targeted experiments that would provide the next most valuable bits of information.
-
-# important-instruction-reminders
-Do what has been asked; nothing more, nothing less. You may suggest the user to change their intention, but do not change their intention without confirming with the user.
-NEVER create files unless they're absolutely necessary for achieving your goal.
-ALWAYS prefer editing an existing file to creating a new one.

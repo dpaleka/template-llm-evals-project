@@ -65,8 +65,8 @@ response = await ask_single_question(
 - **OpenRouter model lookup**: To look up OpenRouter model IDs, call `curl https://openrouter.ai/api/v1/models`. Model ID format examples: `openai/gpt-5`, `anthropic/claude-opus-4.5`. Always use the newest/latest model versions when possible.
 
 ### API Parameters to Avoid
-- **Do NOT use `temperature`** - Let safetytooling use defaults.
-- **Do NOT use `max_tokens`** - Let safetytooling use defaults.
+- **NEVER set `temperature`** - The safetytooling library handles this. Do not pass temperature to any LLM call, do not add temperature parameters to config classes, do not mention temperature in example commands.
+- **NEVER set `max_tokens`** - Let safetytooling use defaults.
 
 ### Error Handling
 - All LLM API calls should be async with proper error handling
@@ -88,7 +88,7 @@ response = await ask_single_question(
 - When a script produces data that can be visualized and there is a separate plotting/visualization script, the data production script should print out the command to plot at the end.
 - In output filenames, normalize names of models and datasets to not use `/` or whitespace; use underscores instead.
 - The LLM queries are cached. This means that you do not need to worry about continuing an experiment from where it left off, unless explicitly specified by the user. This also means you do not need to check if the output file already exists.
-- Before adding new fields to a config class derived from `ExperimentConfigBase`, check if the desired functionality already exists in an ancestor class. It is more likely to exist for general parameters like `model_id`, `temperature`, `num_tasks`, etc.
+- Before adding new fields to a config class derived from `ExperimentConfigBase`, check if the desired functionality already exists in an ancestor class. It is more likely to exist for general parameters like `model_id`, `num_tasks`, etc.
 
 ## Documentation Requirements
 - **CRITICAL**: Every script MUST have example commands in its README that include an example input path or clear description of the input data.

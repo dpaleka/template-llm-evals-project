@@ -4,7 +4,6 @@ import logging
 from dataclasses import dataclass
 from pathlib import Path
 
-from safetytooling.apis import InferenceAPI
 from safetytooling.utils import utils
 from safetytooling.utils.experiment_utils import ExperimentConfigBase
 from simple_parsing import ArgumentParser
@@ -27,7 +26,6 @@ class ResponseLengthConfig(ExperimentConfigBase):
 async def evaluate_response_length(
     task_dict: dict,
     cfg: ResponseLengthConfig,
-    api: InferenceAPI,
 ) -> dict:
     """Evaluate a single task's response length."""
     task_text = task_dict["question"]
@@ -35,7 +33,7 @@ async def evaluate_response_length(
     # Have the model complete the task
     completion_response = (
         await ask_single_question(
-            api,
+            cfg.api,
             model_id=cfg.model_id,
             question=task_text,
             temperature=1.0,
@@ -55,7 +53,7 @@ async def evaluate_response_length(
     }
 
 
-async def run_response_length_experiment(config: ResponseLengthConfig, api: InferenceAPI) -> None:
+async def run_response_length_experiment(config: ResponseLengthConfig) -> None:
     """Run the response length experiment."""
     # Load dataset
     data_file = Path(config.task_file)
@@ -71,7 +69,7 @@ async def run_response_length_experiment(config: ResponseLengthConfig, api: Infe
     # Process tasks
     results = []
     for task_dict in tasks:
-        result = await evaluate_response_length(task_dict, config, api)
+        result = await evaluate_response_length(task_dict, config)
         results.append(result)
 
     # Save results
@@ -100,11 +98,8 @@ async def main():
     # Setup environment after logging is configured
     utils.setup_environment()
 
-    # Initialize API
-    api = InferenceAPI()
-
     # Run the experiment logic
-    await run_response_length_experiment(config, api)
+    await run_response_length_experiment(config)
 
 
 if __name__ == "__main__":

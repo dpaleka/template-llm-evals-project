@@ -47,6 +47,7 @@ response = await ask_single_question(
 ```
 
 - We use `InferenceAPI` from `safetytooling.apis` to make requests to LLMs.
+- **In scripts using `ExperimentConfigBase`, always use `config.api` to get the API instance** - never call `InferenceAPI()` directly. The config's `.api` property ensures CLI arguments like `--openai_num_threads` are respected.
 - For LLM requests, use the wrapper function `ask_single_question` from `common.safetytooling_wrappers` instead of calling `api.ask_single_question` directly.
   - The signature is `async def ask_single_question(api: InferenceAPI, model_id: str, question: str, system_prompt: str | None = None, **api_kwargs,) -> list[str]:`, and the list contains a single response.
   - For requests that run on prompts spanning multiple messages, use `api_call` from `common.safetytooling_wrappers`.
